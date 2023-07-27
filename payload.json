@@ -1,0 +1,6 @@
+{
+    "prompt": "provide a deployment yaml to run the mongodb image with 3 replicas",
+    "model_id": "L3Byb2plY3RzL2dyYW5pdGUvZzJiX2xyNWVuMDZfbWNsMTAyNF9jNDBr",
+    "task_id": "yaml-only-output",
+    "mode": "synchronous"
+}
