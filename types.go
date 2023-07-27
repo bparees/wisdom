@@ -17,13 +17,14 @@ type IBMModelRequestPayload struct {
 }
 
 type IBMModelResponsePayload struct {
-	AllTokens   string `json:"all_tokens"`
-	InputTokens string `json:"input_tokens"`
-	JobID       string `json:"job_id"`
-	Model       string `json:"model"`
-	Status      string `json:"status"`
-	TaskID      string `json:"task_id"`
-	TaskOutput  string `json:"task_output"`
+	AllTokens    string `json:"all_tokens"`
+	InputTokens  string `json:"input_tokens"`
+	JobID        string `json:"job_id"`
+	Model        string `json:"model"`
+	Status       string `json:"status"`
+	TaskID       string `json:"task_id"`
+	TaskOutput   string `json:"task_output"`
+	OutputTokens string `json:"output_tokens"`
 }
 
 // PromptInputPayload represents the payload for the prompt_request endpoint.

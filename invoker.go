@@ -59,5 +59,6 @@ func invokeModel(email, apiKey, prompt string) (*IBMModelResponsePayload, error)
 		fmt.Println("Error decoding API response:", err)
 		return nil, err
 	}
+	apiResp.OutputTokens = apiResp.AllTokens[len(apiResp.InputTokens):]
 	return &apiResp, nil
 }
