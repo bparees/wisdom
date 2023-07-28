@@ -12,10 +12,11 @@ Intended to provide capabilities such as:
 
 ## Building and Usage
 
+### Build the binary
 $ go build .
 
-# run a server
+### Run a server
 $ ./wisdom --email <your email address> --apikey <your IBM openshift LLM workbench apikey>
 
-# do a single inference
+### Do a single inference
 $ ./wisdom infer --email <email address> --apikey <apikey> --prompt "write a deployment yaml for the registry.redhat.io/rhel9/redis-6:latest image with 3 replicas"
