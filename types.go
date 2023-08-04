@@ -1,38 +1,26 @@
 package main
 
-// ResponseType is an enum for valid response types.
-type ResponseType string
-
-const (
-	YAML    ResponseType = "yaml"
-	Natural ResponseType = "natural"
-	Command ResponseType = "command"
-)
-
-type IBMModelRequestPayload struct {
-	Prompt  string `json:"prompt"`
-	ModelID string `json:"model_id"`
-	TaskID  string `json:"task_id"`
-	Mode    string `json:"mode"`
+type Model interface {
+	Invoke(ModelInput) (*ModelResponse, error)
 }
 
-type IBMModelResponsePayload struct {
-	AllTokens    string `json:"all_tokens"`
-	InputTokens  string `json:"input_tokens"`
-	JobID        string `json:"job_id"`
-	Model        string `json:"model"`
-	Status       string `json:"status"`
-	TaskID       string `json:"task_id"`
-	TaskOutput   string `json:"task_output"`
-	OutputTokens string `json:"output_tokens"`
-}
-
-// PromptInputPayload represents the payload for the prompt_request endpoint.
-type PromptInputPayload struct {
+// ModelInput represents the payload for the prompt_request endpoint.
+type ModelInput struct {
+	UserId         string       `json:"userid"`
+	APIKey         string       `json:"apikey"`
+	ModelId        string       `json:"modelid"`
 	Prompt         string       `json:"prompt"`
 	Context        string       `json:"context"`
 	ConversationID string       `json:"conversationId"`
 	ResponseType   ResponseType `json:"responseType"`
+}
+
+type ModelResponse struct {
+	Input          string `json:"input_tokens"`
+	Status         string `json:"status"`
+	RequestID      string `json:"request_id"`
+	ConversationID string `json:"conversation_id"`
+	Output         string `json:"output"`
 }
 
 // FeedbackPayload represents the payload for the feedback endpoint.

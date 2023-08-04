@@ -9,10 +9,12 @@ import (
 type Handler struct {
 	email  string
 	apiKey string
+	filter Filter
+	models map[string]Model
 }
 
 func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
-	var payload PromptInputPayload
+	var payload ModelInput
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -23,7 +25,17 @@ func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
 	//response := fmt.Sprintf("Received prompt: %s\n", payload.Prompt)
 	fmt.Printf("Running inference for prompt: %s\n", payload.Prompt)
 
-	response, err := invokeModel(h.email, h.apiKey, payload.Prompt)
+	input := ModelInput{
+		UserId: h.email,
+		APIKey: h.apiKey,
+		Prompt: payload.Prompt,
+	}
+
+	model, found := h.models[payload.ModelId]
+	if !found {
+		// error model not found.
+	}
+	response, err := invokeModel(input, model, h.filter)
 	if err != nil {
 		w.WriteHeader(http.StatusExpectationFailed)
 		w.Write([]byte(err.Error()))
@@ -31,7 +43,7 @@ func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(response.AllTokens))
+	w.Write([]byte(response.Output))
 }
 
 func (h *Handler) FeedbackHandler(w http.ResponseWriter, r *http.Request) {

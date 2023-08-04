@@ -45,6 +45,7 @@ func newStartServerCommand() *cobra.Command {
 			h := Handler{
 				email:  o.email,
 				apiKey: o.apiKey,
+				filter: NewFilter(),
 			}
 			r.HandleFunc("/prompt_request", h.PromptRequestHandler).Methods("POST")
 			r.HandleFunc("/feedback", h.FeedbackHandler).Methods("POST")
@@ -78,12 +79,24 @@ func newInferCommand() *cobra.Command {
 			if o.prompt == "" {
 				return fmt.Errorf("model prompt is required")
 			}
-			response, err := invokeModel(o.email, o.apiKey, o.prompt)
+			filter := NewFilter()
+			//model := NewIBMModel("L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx", "https://wca.wisdomforocp-cf7808d3396a7c1915bd1818afbfb3c0-0000.us-south.containers.appdomain.cloud")
+			model := NewOpenAIModel("gpt-3.5-turbo", "https://api.openai.com")
+
+			input := ModelInput{
+				UserId: o.email,
+				APIKey: o.apiKey,
+				Prompt: o.prompt,
+			}
+			response, err := invokeModel(input, model, filter)
 			if err != nil {
+				if response != nil && response.Output != "" {
+					fmt.Printf("Response(Error):\n%s\n", response.Output)
+				}
 				return fmt.Errorf("error invoking the LLM: %v", err)
 			}
 
-			fmt.Printf("Response:\n%s\n", response.OutputTokens)
+			fmt.Printf("Response:\n%s\n", response.Output)
 
 			return nil
 		},
