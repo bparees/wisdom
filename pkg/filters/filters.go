@@ -1,15 +1,17 @@
-package main
+package filters
 
 import (
 	"gopkg.in/yaml.v2"
+
+	"github.com/openshift/wisdom/pkg/api"
 )
 
 type Filter struct {
 	inputFilterChain    []InputFilter
 	responseFilterChain []ResponseFilter
 }
-type InputFilter func(input *ModelInput) (*ModelInput, error)
-type ResponseFilter func(response *ModelResponse) (*ModelResponse, error)
+type InputFilter func(input *api.ModelInput) (*api.ModelInput, error)
+type ResponseFilter func(response *api.ModelResponse) (*api.ModelResponse, error)
 
 func NewFilter() Filter {
 	filter := Filter{}
@@ -17,7 +19,7 @@ func NewFilter() Filter {
 	return filter
 }
 
-func (f *Filter) FilterInput(input *ModelInput) (*ModelInput, error) {
+func (f *Filter) FilterInput(input *api.ModelInput) (*api.ModelInput, error) {
 	output := input
 	var err error
 	for _, filter := range f.inputFilterChain {
@@ -29,7 +31,7 @@ func (f *Filter) FilterInput(input *ModelInput) (*ModelInput, error) {
 	return output, err
 }
 
-func (f *Filter) FilterResponse(response *ModelResponse) (*ModelResponse, error) {
+func (f *Filter) FilterResponse(response *api.ModelResponse) (*api.ModelResponse, error) {
 	output := response
 	var err error
 	for _, filter := range f.responseFilterChain {
@@ -41,7 +43,7 @@ func (f *Filter) FilterResponse(response *ModelResponse) (*ModelResponse, error)
 	return output, err
 }
 
-func YamlLinter(response *ModelResponse) (*ModelResponse, error) {
+func YamlLinter(response *api.ModelResponse) (*api.ModelResponse, error) {
 	return response, isValidYAML(response.Output)
 }
 

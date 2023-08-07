@@ -1,10 +1,17 @@
-package main
+package openai
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/openshift/wisdom/pkg/api"
+)
+
+const (
+	PROVIDER_ID = "openai"
+	MODEL_ID    = "gpt-3.5-turbo"
 )
 
 // OpenAI
@@ -38,7 +45,7 @@ func NewOpenAIModel(modelId, url string) *OpenAIModel {
 	}
 }
 
-func (m *OpenAIModel) Invoke(input ModelInput) (*ModelResponse, error) {
+func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	// Create the JSON payload
 	payload := OpenAIModelRequestPayload{
 		Model: m.modelId,
@@ -90,7 +97,7 @@ func (m *OpenAIModel) Invoke(input ModelInput) (*ModelResponse, error) {
 	if len(apiResp.Choices) == 0 {
 		return nil, fmt.Errorf("model returned no valid responses: %v", apiResp)
 	}
-	response := ModelResponse{}
+	response := api.ModelResponse{}
 	response.Input = input.Prompt
 	response.Output = apiResp.Choices[0].Message.Content
 	return &response, err

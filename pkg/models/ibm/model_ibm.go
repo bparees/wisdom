@@ -1,19 +1,17 @@
-package main
+package ibm
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/openshift/wisdom/pkg/api"
 )
 
-// ResponseType is an enum for valid response types.
-type ResponseType string
-
 const (
-	YAML    ResponseType = "yaml"
-	Natural ResponseType = "natural"
-	Command ResponseType = "command"
+	PROVIDER_ID = "ibm"
+	MODEL_ID    = "L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx"
 )
 
 type IBMModelRequestPayload struct {
@@ -46,7 +44,7 @@ func NewIBMModel(modelId, url string) *IBMModel {
 	}
 }
 
-func (m *IBMModel) Invoke(input ModelInput) (*ModelResponse, error) {
+func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	// Create the JSON payload
 	payload := IBMModelRequestPayload{
 		Prompt:  input.Prompt,
@@ -98,7 +96,7 @@ func (m *IBMModel) Invoke(input ModelInput) (*ModelResponse, error) {
 		fmt.Println("Error decoding API response:", err)
 		return nil, err
 	}
-	response := ModelResponse{}
+	response := api.ModelResponse{}
 	response.Input = input.Prompt
 	response.Output = apiResp.TaskOutput
 	//output := apiResp.AllTokens[len(apiResp.InputTokens):]

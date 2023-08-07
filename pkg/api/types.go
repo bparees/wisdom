@@ -1,4 +1,4 @@
-package main
+package api
 
 type Model interface {
 	Invoke(ModelInput) (*ModelResponse, error)
@@ -6,13 +6,12 @@ type Model interface {
 
 // ModelInput represents the payload for the prompt_request endpoint.
 type ModelInput struct {
-	UserId         string       `json:"userid"`
-	APIKey         string       `json:"apikey"`
-	ModelId        string       `json:"modelid"`
-	Prompt         string       `json:"prompt"`
-	Context        string       `json:"context"`
-	ConversationID string       `json:"conversationId"`
-	ResponseType   ResponseType `json:"responseType"`
+	UserId         string `json:"userid"`
+	APIKey         string `json:"apikey"`
+	ModelId        string `json:"modelid"`
+	Prompt         string `json:"prompt"`
+	Context        string `json:"context"`
+	ConversationID string `json:"conversationId"`
 }
 
 type ModelResponse struct {

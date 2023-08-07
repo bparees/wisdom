@@ -1,20 +1,24 @@
-package main
+package handler
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/openshift/wisdom/pkg/api"
+	"github.com/openshift/wisdom/pkg/filters"
+	"github.com/openshift/wisdom/pkg/models"
 )
 
 type Handler struct {
-	email  string
-	apiKey string
-	filter Filter
-	models map[string]Model
+	Email     string
+	APIKey    string
+	Filter    filters.Filter
+	Providers map[string]api.Model
 }
 
 func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
-	var payload ModelInput
+	var payload api.ModelInput
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -25,17 +29,18 @@ func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
 	//response := fmt.Sprintf("Received prompt: %s\n", payload.Prompt)
 	fmt.Printf("Running inference for prompt: %s\n", payload.Prompt)
 
-	input := ModelInput{
-		UserId: h.email,
-		APIKey: h.apiKey,
+	input := api.ModelInput{
+		UserId: h.Email,
+		APIKey: h.APIKey,
 		Prompt: payload.Prompt,
 	}
 
-	model, found := h.models[payload.ModelId]
+	model, found := h.Providers[payload.ModelId]
 	if !found {
-		// error model not found.
+		http.Error(w, fmt.Sprintf("Invalid provider/model: %s", payload.ModelId), http.StatusBadRequest)
+		return
 	}
-	response, err := invokeModel(input, model, h.filter)
+	response, err := models.InvokeModel(input, model, h.Filter)
 	if err != nil {
 		w.WriteHeader(http.StatusExpectationFailed)
 		w.Write([]byte(err.Error()))
@@ -47,7 +52,7 @@ func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) FeedbackHandler(w http.ResponseWriter, r *http.Request) {
-	var payload FeedbackPayload
+	var payload api.FeedbackPayload
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
