@@ -22,14 +22,13 @@ type IBMModelRequestPayload struct {
 }
 
 type IBMModelResponsePayload struct {
-	AllTokens    string `json:"all_tokens"`
-	InputTokens  string `json:"input_tokens"`
-	JobID        string `json:"job_id"`
-	Model        string `json:"model"`
-	Status       string `json:"status"`
-	TaskID       string `json:"task_id"`
-	TaskOutput   string `json:"task_output"`
-	OutputTokens string `json:"output_tokens"`
+	AllTokens   string `json:"all_tokens"`
+	InputTokens string `json:"input_tokens"`
+	JobID       string `json:"job_id"`
+	Model       string `json:"model"`
+	Status      string `json:"status"`
+	TaskID      string `json:"task_id"`
+	TaskOutput  string `json:"task_output"`
 }
 
 type IBMModel struct {
@@ -45,7 +44,14 @@ func NewIBMModel(modelId, url string) *IBMModel {
 }
 
 func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
-	// Create the JSON payload
+
+	if input.UserId == "" {
+		return nil, fmt.Errorf("user email address is required, none provided")
+	}
+	if input.APIKey == "" {
+		return nil, fmt.Errorf("api key is required, none provided")
+	}
+
 	payload := IBMModelRequestPayload{
 		Prompt:  input.Prompt,
 		ModelID: m.modelId,
@@ -99,6 +105,7 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	response := api.ModelResponse{}
 	response.Input = input.Prompt
 	response.Output = apiResp.TaskOutput
+	response.RawOutput = apiResp.AllTokens
 	//output := apiResp.AllTokens[len(apiResp.InputTokens):]
 	response.RequestID = apiResp.JobID
 

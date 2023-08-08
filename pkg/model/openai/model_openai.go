@@ -46,7 +46,11 @@ func NewOpenAIModel(modelId, url string) *OpenAIModel {
 }
 
 func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
-	// Create the JSON payload
+
+	if input.APIKey == "" {
+		return nil, fmt.Errorf("api key is required, none provided")
+	}
+
 	payload := OpenAIModelRequestPayload{
 		Model: m.modelId,
 	}
