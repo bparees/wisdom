@@ -16,8 +16,11 @@ Intended to provide capabilities such as:
 $ cd cmd/wisdom
 $ go build .
 
+### Define a config file
+See https://github.com/bparees/wisdom/config/sample.cfg.yaml for an example.
+
 ### Run a server
-$ ./wisdom serve --email <your email address> --apikey <your IBM openshift LLM workbench apikey>
+$ ./wisdom serve --config path/to/config.yaml
 
 ### Do a single inference
-$ ./wisdom infer --email <email address> --apikey <apikey> --prompt "write a deployment yaml for the registry.redhat.io/rhel9/redis-6:latest image with 3 replicas"
+$ ./wisdom infer --config path/to/config.yaml --prompt "write a deployment yaml for the registry.redhat.io/rhel9/redis-6:latest image with 3 replicas"

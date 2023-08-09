@@ -25,7 +25,10 @@ var (
 
 func main() {
 
-	var rootCmd = &cobra.Command{Long: "Runs an inference router to proxy between user facing clients and LLMs"}
+	var rootCmd = &cobra.Command{
+		Long:         "Runs an inference router to proxy between user facing clients and LLMs",
+		SilenceUsage: true,
+	}
 
 	rootCmd.AddCommand(newStartServerCommand())
 	rootCmd.AddCommand(newInferCommand())
@@ -159,6 +162,7 @@ func newInferCommand() *cobra.Command {
 			input := api.ModelInput{
 				Prompt: o.prompt,
 			}
+			log.Debugf("invoking model %s/%s\n", o.provider, o.modelId)
 			response, err := model.InvokeModel(input, m, filter)
 			if err != nil {
 				if response != nil && response.Output != "" {

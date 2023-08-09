@@ -103,15 +103,14 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
-		//fmt.Println("API request failed with status:", resp.Status)
-		return nil, err
+		return nil, fmt.Errorf("API request failed with status: %v", resp.Status)
 	}
 
 	// Parse the JSON response into the APIResponse struct
 	var apiResp IBMModelResponsePayload
 	err = json.NewDecoder(resp.Body).Decode(&apiResp)
 	if err != nil {
-		fmt.Println("Error decoding API response:", err)
+		//fmt.Println("Error decoding API response:", err)
 		return nil, err
 	}
 	response := api.ModelResponse{}
