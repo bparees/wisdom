@@ -17,7 +17,7 @@ $ cd cmd/wisdom
 $ go build .
 
 ### Define a config file
-See https://github.com/bparees/wisdom/config/sample.cfg.yaml for an example.
+See https://github.com/bparees/wisdom/blob/main/config/sample.cfg.yaml for an example.
 
 ### Run a server
 $ ./wisdom serve --config path/to/config.yaml
