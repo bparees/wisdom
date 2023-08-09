@@ -13,10 +13,11 @@ Intended to provide capabilities such as:
 ## Building and Usage
 
 ### Build the binary
+$ cd cmd/wisdom
 $ go build .
 
 ### Run a server
-$ ./wisdom --email <your email address> --apikey <your IBM openshift LLM workbench apikey>
+$ ./wisdom serve --email <your email address> --apikey <your IBM openshift LLM workbench apikey>
 
 ### Do a single inference
 $ ./wisdom infer --email <email address> --apikey <apikey> --prompt "write a deployment yaml for the registry.redhat.io/rhel9/redis-6:latest image with 3 replicas"
