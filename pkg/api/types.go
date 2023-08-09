@@ -44,8 +44,8 @@ type ModelConfig struct {
 }
 
 type ServerConfig struct {
-	TLSCertFile string `yaml:"tlsCert"`
-	TLSKeyFile  string `yaml:"tlsKey"`
+	TLSCertFile string `yaml:"tlsCertFile"`
+	TLSKeyFile  string `yaml:"tlsKeyFile"`
 }
 
 type Config struct {

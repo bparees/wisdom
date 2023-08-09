@@ -96,11 +96,19 @@ func newStartServerCommand() *cobra.Command {
 			r.HandleFunc("/prompt_request", h.PromptRequestHandler).Methods("POST")
 			r.HandleFunc("/feedback", h.FeedbackHandler).Methods("POST")
 
-			fmt.Println("Server listening on port 8080...")
-			fmt.Printf("Default provider: %s\n", h.DefaultProvider)
-			fmt.Printf("Default model: %s\n", h.DefaultModel)
-			http.ListenAndServe(":8080", r)
-			return nil
+			log.Infof("Default model provider: %s\n", h.DefaultProvider)
+			log.Infof("Default model: %s\n", h.DefaultModel)
+
+			if config.ServerConfig.TLSCertFile != "" && config.ServerConfig.TLSKeyFile != "" {
+
+				log.Info("Server listening on TLS port 8443...")
+				err = http.ListenAndServeTLS(":8443", config.ServerConfig.TLSCertFile, config.ServerConfig.TLSKeyFile, r)
+			} else {
+				log.Warn("No TLS configuration provided, traffic will not be encryption")
+				log.Info("Server listening on port 8080...")
+				err = http.ListenAndServe(":8080", r)
+			}
+			return err
 		},
 	}
 
