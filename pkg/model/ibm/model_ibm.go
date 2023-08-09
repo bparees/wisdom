@@ -34,22 +34,34 @@ type IBMModelResponsePayload struct {
 type IBMModel struct {
 	modelId string
 	url     string
+	apiKey  string
+	userId  string
 }
 
-func NewIBMModel(modelId, url string) *IBMModel {
+func NewIBMModel(modelId, url, userId, apiKey string) *IBMModel {
 	return &IBMModel{
 		modelId: modelId,
 		url:     url,
+		apiKey:  apiKey,
+		userId:  userId,
 	}
 }
 
 func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 
-	if input.UserId == "" {
+	if input.UserId == "" && m.userId == "" {
 		return nil, fmt.Errorf("user email address is required, none provided")
 	}
-	if input.APIKey == "" {
+	if input.APIKey == "" && m.apiKey == "" {
 		return nil, fmt.Errorf("api key is required, none provided")
+	}
+
+	apiKey, userId := m.apiKey, m.userId
+	if input.APIKey != "" {
+		apiKey = input.APIKey
+	}
+	if input.UserId != "" {
+		userId = input.UserId
 	}
 
 	payload := IBMModelRequestPayload{
@@ -77,8 +89,8 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	req.Header.Set("Content-Type", "application/json")
 
 	// Set the "Authorization" header with the bearer token
-	req.Header.Set("Authorization", "Bearer "+input.APIKey)
-	req.Header.Set("Email", input.UserId)
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Email", userId)
 
 	// Make the API call
 	client := &http.Client{}

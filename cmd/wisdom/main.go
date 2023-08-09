@@ -3,10 +3,13 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strings"
+	"os"
+	"reflect"
 
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 
 	"github.com/openshift/wisdom/pkg/api"
 	"github.com/openshift/wisdom/pkg/filters"
@@ -16,8 +19,9 @@ import (
 	"github.com/openshift/wisdom/pkg/server"
 )
 
-func init() {
-}
+var (
+	models map[string]api.Model
+)
 
 func main() {
 
@@ -30,11 +34,29 @@ func main() {
 }
 
 type options struct {
-	email    string
-	apiKey   string
-	prompt   string
+	configFile string
+	verbosity  string
+}
+
+type inferOptions struct {
+	options
 	provider string
-	model    string
+	modelId  string
+	prompt   string
+}
+
+func loadConfig(filename string) (api.Config, error) {
+	var config api.Config
+	configFile, err := os.Open(filename)
+	if err != nil {
+		return config, err
+	}
+	defer configFile.Close()
+
+	yamlParser := yaml.NewDecoder(configFile)
+	err = yamlParser.Decode(&config)
+	log.Debugf("Loaded config: %#v\n", config)
+	return config, err
 }
 
 func newStartServerCommand() *cobra.Command {
@@ -44,15 +66,28 @@ func newStartServerCommand() *cobra.Command {
 		Use:   "serve",
 		Short: "Start the HTTP server",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			level, err := log.ParseLevel(o.verbosity)
+			if err != nil {
+				log.WithError(err).Fatal("Cannot parse log-level")
+			}
+			log.SetLevel(level)
+
+			if o.configFile == "" {
+				return fmt.Errorf("config file is required")
+			}
+			config, err := loadConfig(o.configFile)
+			if err != nil {
+				return fmt.Errorf("error loading configfile %s: %v", o.configFile, err)
+			}
 			r := mux.NewRouter()
 
+			models = initModels(config)
+
 			h := server.Handler{
-				UserId:          o.email,
-				APIKey:          o.apiKey,
 				Filter:          filters.NewFilter(),
-				DefaultProvider: o.provider,
-				DefaultModel:    o.model,
-				Models:          createModels(),
+				DefaultProvider: config.DefaultProvider,
+				DefaultModel:    config.DefaultModelId,
+				Models:          models,
 			}
 
 			r.HandleFunc("/prompt_request", h.PromptRequestHandler).Methods("POST")
@@ -66,40 +101,62 @@ func newStartServerCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.email, "email", "e", "", "Model email address used when not provided in the request")
-	cmd.Flags().StringVarP(&o.apiKey, "apikey", "a", "", "Model API key used when not provided in the request")
-	cmd.Flags().StringVarP(&o.provider, "provider", "p", "ibm", "Which LLM provider to use when not provided in the request.  Value values are: ibm, openai")
-	cmd.Flags().StringVarP(&o.model, "model", "m", "L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx", "Which LLM model to use from the chosen provider when not provided in the request.  Valid values depend on the chosen provider.")
+	flags := cmd.Flags()
+	flags.StringVarP(&o.configFile, "config", "c", "", "Config file to use")
+	flags.StringVarP(&o.verbosity, "verbosity", "v", "info", "Log verbosity level (trace,debug,info,warn,error) (default info)")
 
+	/*
+		cmd.Flags().StringVarP(&o.email, "email", "e", "", "Model email address used when not provided in the request")
+		cmd.Flags().StringVarP(&o.apiKey, "apikey", "a", "", "Model API key used when not provided in the request")
+		cmd.Flags().StringVarP(&o.provider, "provider", "p", "ibm", "Which LLM provider to use when not provided in the request.  Value values are: ibm, openai")
+		cmd.Flags().StringVarP(&o.model, "model", "m", "L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx", "Which LLM model to use from the chosen provider when not provided in the request.  Valid values depend on the chosen provider.")
+	*/
 	return cmd
 
 }
 
 func newInferCommand() *cobra.Command {
-	o := options{}
+	o := inferOptions{}
 
 	var cmd = &cobra.Command{
 		Use:   "infer",
 		Short: "Do a single inference",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if o.email == "" {
-				return fmt.Errorf("user email address is required")
+			level, err := log.ParseLevel(o.verbosity)
+			if err != nil {
+				log.WithError(err).Fatal("Cannot parse log-level")
 			}
-			if o.apiKey == "" {
-				return fmt.Errorf("API key is required")
+			log.SetLevel(level)
+
+			if o.configFile == "" {
+				return fmt.Errorf("config file is required")
 			}
+			config, err := loadConfig(o.configFile)
+			if err != nil {
+				return fmt.Errorf("error loading configfile %s: %v", o.configFile, err)
+			}
+
+			models = initModels(config)
+
 			if o.prompt == "" {
 				return fmt.Errorf("model prompt is required")
 			}
 			filter := filters.NewFilter()
-			m, err := getModel(o.provider, o.model)
+
+			// If the user didn't specify a provider or model, use the defaults from the config file
+			if o.provider == "" {
+				o.provider = config.DefaultProvider
+			}
+			if o.modelId == "" {
+				o.modelId = config.DefaultModelId
+			}
+
+			m, err := getModel(o.provider, o.modelId)
 			if err != nil {
 				return err
 			}
 
 			input := api.ModelInput{
-				UserId: o.email,
-				APIKey: o.apiKey,
 				Prompt: o.prompt,
 			}
 			response, err := model.InvokeModel(input, m, filter)
@@ -116,32 +173,37 @@ func newInferCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&o.email, "email", "e", "", "User's email address")
-	cmd.Flags().StringVarP(&o.apiKey, "apikey", "a", "", "User's API key")
-	cmd.Flags().StringVarP(&o.provider, "provider", "p", "ibm", "Which backend LLM provider to use.  Valid values are: ibm, openai")
-	cmd.Flags().StringVarP(&o.model, "model", "m", "L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx", "Which LLM model to use from the provider.  Valid values depend on the chosen provider.")
-	cmd.Flags().StringVarP(&o.prompt, "inference", "i", "", "Model prompt to be inferred")
+	flags := cmd.Flags()
+	flags.StringVarP(&o.configFile, "config", "c", "", "Config file to use")
+	flags.StringVarP(&o.prompt, "inference", "i", "", "Model prompt to be inferred")
+	flags.StringVarP(&o.modelId, "model", "m", "", "Which LLM model to use from the provider.")
+	flags.StringVarP(&o.provider, "provider", "p", "", "Which backend LLM provider to use.")
+	flags.StringVarP(&o.verbosity, "verbosity", "v", "info", "Log verbosity level (trace,debug,info,warn,error) (default info)")
 
 	return cmd
 
 }
 
-func createModels() map[string]api.Model {
+func initModels(config api.Config) map[string]api.Model {
 	models := make(map[string]api.Model)
-	models[ibm.PROVIDER_ID+"|"+ibm.MODEL_ID] = ibm.NewIBMModel(ibm.MODEL_ID, "https://wca.wisdomforocp-cf7808d3396a7c1915bd1818afbfb3c0-0000.us-south.containers.appdomain.cloud")
-	models[openai.PROVIDER_ID+"|"+openai.MODEL_ID] = openai.NewOpenAIModel(openai.MODEL_ID, "https://api.openai.com")
+	for _, m := range config.Models {
+		log.Debugf("Initializing model: %v", m)
+		switch m.Provider {
+		case "ibm":
+			models[m.Provider+"/"+m.ModelId] = ibm.NewIBMModel(m.ModelId, m.URL, m.UserId, m.APIKey)
+		case "openai":
+			models[m.Provider+"/"+m.ModelId] = openai.NewOpenAIModel(m.ModelId, m.URL, m.APIKey)
+		default:
+			fmt.Printf("Unknown provider: %s\n", m.Provider)
+		}
+	}
 	return models
 }
 
 func getModel(provider, modelId string) (api.Model, error) {
-	var model api.Model
-	switch strings.ToLower(provider) {
-	case ibm.PROVIDER_ID:
-		model = ibm.NewIBMModel(modelId, "https://wca.wisdomforocp-cf7808d3396a7c1915bd1818afbfb3c0-0000.us-south.containers.appdomain.cloud")
-	case openai.PROVIDER_ID:
-		model = openai.NewOpenAIModel(modelId, "https://api.openai.com")
-	default:
-		return nil, fmt.Errorf("invalid provider specified: %s\nValid values are [ibm,openai]", provider)
+	if model, found := models[provider+"/"+modelId]; !found {
+		return nil, fmt.Errorf("Provider/Model not found, valid provider/models: %q", reflect.ValueOf(models).MapKeys())
+	} else {
+		return model, nil
 	}
-	return model, nil
 }

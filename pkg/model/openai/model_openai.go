@@ -36,19 +36,26 @@ type OpenAIModelResponsePayload struct {
 type OpenAIModel struct {
 	modelId string
 	url     string
+	apiKey  string
 }
 
-func NewOpenAIModel(modelId, url string) *OpenAIModel {
+func NewOpenAIModel(modelId, url, apiKey string) *OpenAIModel {
 	return &OpenAIModel{
 		modelId: modelId,
 		url:     url,
+		apiKey:  apiKey,
 	}
 }
 
 func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 
-	if input.APIKey == "" {
+	if input.APIKey == "" && m.apiKey == "" {
 		return nil, fmt.Errorf("api key is required, none provided")
+	}
+
+	apiKey := m.apiKey
+	if input.APIKey != "" {
+		apiKey = input.APIKey
 	}
 
 	payload := OpenAIModelRequestPayload{
@@ -74,7 +81,7 @@ func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	req.Header.Set("Content-Type", "application/json")
 
 	// Set the "Authorization" header with the bearer token
-	req.Header.Set("Authorization", "Bearer "+input.APIKey)
+	req.Header.Set("Authorization", "Bearer "+apiKey)
 	//req.Header.Set("Email", input.UserId)
 
 	// Make the API call

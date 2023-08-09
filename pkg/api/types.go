@@ -33,3 +33,24 @@ type FeedbackPayload struct {
 	CorrectedResponse string `json:"correctedResponse"`
 	UserComments      string `json:"userComments"`
 }
+
+type ModelConfig struct {
+	UserId string `yaml:"userId"`
+	APIKey string `yaml:"apiKey"`
+
+	Provider string `yaml:"provider"`
+	ModelId  string `yaml:"modelId"`
+	URL      string `yaml:"url"`
+}
+
+type ServerConfig struct {
+	TLSCertFile string `yaml:"tlsCert"`
+	TLSKeyFile  string `yaml:"tlsKey"`
+}
+
+type Config struct {
+	Models          []ModelConfig `yaml:"models"`
+	ServerConfig    ServerConfig  `yaml:"serverConfig"`
+	DefaultProvider string        `yaml:"defaultProvider"`
+	DefaultModelId  string        `yaml:"defaultModelId"`
+}

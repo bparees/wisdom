@@ -12,8 +12,6 @@ import (
 )
 
 type Handler struct {
-	UserId          string
-	APIKey          string
 	Filter          filters.Filter
 	DefaultModel    string
 	DefaultProvider string
@@ -32,20 +30,13 @@ func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
 	//response := fmt.Sprintf("Received prompt: %s\n", payload.Prompt)
 	fmt.Printf("Running inference for prompt: %s\n", payload.Prompt)
 
-	if payload.UserId == "" {
-		payload.UserId = h.UserId
-	}
-	if payload.APIKey == "" {
-		payload.APIKey = h.APIKey
+	if payload.Provider == "" {
+		payload.Provider = h.DefaultProvider
 	}
 	if payload.ModelId == "" {
 		payload.ModelId = h.DefaultModel
 	}
-	if payload.Provider == "" {
-		payload.Provider = h.DefaultProvider
-	}
-
-	m, found := h.Models[payload.Provider+"|"+payload.ModelId]
+	m, found := h.Models[payload.Provider+"/"+payload.ModelId]
 	if !found {
 		http.Error(w, fmt.Sprintf("Invalid provider/model: %s|%s", payload.Provider, payload.ModelId), http.StatusBadRequest)
 		return

@@ -1,0 +1,16 @@
+---
+  serverConfig:
+    tlsCertFile: foo
+    tlsCertKey: bar
+  defaultProvider: ibm
+  defaultModelId: L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx
+  models:
+    - provider: ibm
+      modelId: L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx
+      url: https://wca.wisdomforocp-cf7808d3396a7c1915bd1818afbfb3c0-0000.us-south.containers.appdomain.cloud
+      userId: $USERID
+      apiKey: $APIKEY
+    - provider: openai
+      modelId: chatgpt-3.5-turbo
+      url: https://api.openai.com
+      apiKey: $APIKEY
