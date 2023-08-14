@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wisdom
+  annotations:
+    route.openshift.io/termination: "passthrough" 
+    route.openshift.io/destination-ca-certificate-secret: wisdom-serving-certs
+spec:
+  ingressClassName: openshift-default
+  rules:
+  - host: wisdom-bparees.apps.ci.l2s4.p1.openshiftapps.com
+    http:
+      paths:
+      - path: ''
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: wisdom-app
+            port:
+              number: 8443

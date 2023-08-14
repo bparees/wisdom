@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wisdom-app
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: wisdom-serving-certs
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+  - port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: wisdom

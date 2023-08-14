@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wisdom-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wisdom
+  template:
+    metadata:
+      labels:
+        app: wisdom
+    spec:
+      containers:
+        - name: wisdom-container
+          image: quay.io/bparees/wisdom:latest
+          args:
+            - serve
+            - -c
+            - /var/run/config/config.yaml
+            - -v
+            - debug
+          volumeMounts:
+            - name: config-volume
+              mountPath: /var/run/config
+            - name: serving-certs
+              mountPath: /var/run/certs
+      volumes:
+        - name: config-volume
+          secret:
+            secretName: wisdom-cfg
+        - name: serving-certs
+          secret:
+            secretName: wisdom-serving-certs
