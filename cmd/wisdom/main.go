@@ -92,9 +92,12 @@ func newStartServerCommand() *cobra.Command {
 				DefaultModel:    config.DefaultModelId,
 				Models:          models,
 			}
+			h.BearerTokens = make(map[string]bool)
+			for _, t := range config.ServerConfig.BearerTokens {
+				h.BearerTokens[t] = true
+			}
 
 			r.HandleFunc("/prompt_request", h.PromptRequestHandler).Methods("POST")
-			r.HandleFunc("/feedback", h.FeedbackHandler).Methods("POST")
 
 			log.Infof("Default model provider: %s\n", h.DefaultProvider)
 			log.Infof("Default model: %s\n", h.DefaultModel)

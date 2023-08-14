@@ -2,6 +2,8 @@
   serverConfig:
     tlsCertFile: foo
     tlsKeyFile: bar
+    bearerTokens: 
+    - somestring
   defaultProvider: ibm
   defaultModelId: L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx
   models:
