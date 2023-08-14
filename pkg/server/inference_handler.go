@@ -10,7 +10,7 @@ import (
 	"github.com/openshift/wisdom/pkg/model"
 )
 
-func (h *Handler) PromptRequestHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 	if !h.hasValidBearerToken(r) {
 		http.Error(w, "No valid bearer token found", http.StatusUnauthorized)
 		return

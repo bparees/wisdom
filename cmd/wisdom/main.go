@@ -97,7 +97,7 @@ func newStartServerCommand() *cobra.Command {
 				h.BearerTokens[t] = true
 			}
 
-			r.HandleFunc("/prompt_request", h.PromptRequestHandler).Methods("POST")
+			r.HandleFunc("/infer", h.InferHandler).Methods("POST")
 
 			log.Infof("Default model provider: %s\n", h.DefaultProvider)
 			log.Infof("Default model: %s\n", h.DefaultModel)
