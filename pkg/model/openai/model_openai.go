@@ -111,5 +111,6 @@ func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	response := api.ModelResponse{}
 	response.Input = input.Prompt
 	response.Output = apiResp.Choices[0].Message.Content
+	response.RawOutput = apiResp.Choices[0].Message.Content
 	return &response, err
 }
