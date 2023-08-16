@@ -1,9 +1,9 @@
 package filters
 
 import (
-	"gopkg.in/yaml.v2"
-
 	"github.com/openshift/wisdom/pkg/api"
+	"github.com/openshift/wisdom/pkg/filters/markdown"
+	"github.com/openshift/wisdom/pkg/filters/yaml"
 )
 
 type Filter struct {
@@ -15,7 +15,7 @@ type ResponseFilter func(response *api.ModelResponse) (*api.ModelResponse, error
 
 func NewFilter() Filter {
 	filter := Filter{}
-	//filter.responseFilterChain = append(filter.responseFilterChain, YamlLinter)
+	filter.responseFilterChain = append(filter.responseFilterChain, markdown.MarkdownStripper, yaml.YamlLinter)
 	return filter
 }
 
@@ -41,14 +41,4 @@ func (f *Filter) FilterResponse(response *api.ModelResponse) (*api.ModelResponse
 		}
 	}
 	return output, err
-}
-
-func YamlLinter(response *api.ModelResponse) (*api.ModelResponse, error) {
-	return response, isValidYAML(response.Output)
-}
-
-func isValidYAML(yamlString string) error {
-	var data interface{}
-	err := yaml.Unmarshal([]byte(yamlString), &data)
-	return err
 }

@@ -8,7 +8,7 @@ type Model interface {
 type ModelInput struct {
 	UserId         string `json:"userid"`
 	APIKey         string `json:"apikey"`
-	ModelId        string `json:"modelid"`
+	ModelId        string `json:"modelId"`
 	Provider       string `json:"provider"`
 	Prompt         string `json:"prompt"`
 	Context        string `json:"context"`
@@ -18,10 +18,11 @@ type ModelInput struct {
 type ModelResponse struct {
 	Input          string `json:"input_tokens"`
 	Status         string `json:"status"`
-	RequestID      string `json:"request_id"`
-	ConversationID string `json:"conversation_id"`
+	RequestID      string `json:"requestId"`
+	ConversationID string `json:"conversationId"`
 	Output         string `json:"output"`
 	RawOutput      string `json:"raw_output"`
+	ErrorMessage   string `json:"error"`
 }
 
 // FeedbackPayload represents the payload for the feedback endpoint.

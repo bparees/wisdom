@@ -36,21 +36,22 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response, err := model.InvokeModel(payload, m, h.Filter)
-	if err != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		w.Write([]byte(err.Error()))
-		return
-	}
 
 	buf := bytes.Buffer{}
-	err = json.NewEncoder(&buf).Encode(response)
-	if err != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
-		w.Write([]byte(err.Error()))
-		return
+	if response != nil {
+		err = json.NewEncoder(&buf).Encode(response)
+		if err != nil {
+			w.WriteHeader(http.StatusExpectationFailed)
+			w.Write([]byte(err.Error()))
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "text/json")
-	w.WriteHeader(http.StatusOK)
+	if err != nil || (response != nil && response.ErrorMessage != "") {
+		w.WriteHeader(http.StatusExpectationFailed)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
 	w.Write(buf.Bytes())
 }
