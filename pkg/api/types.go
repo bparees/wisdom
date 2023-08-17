@@ -1,5 +1,9 @@
 package api
 
+import (
+	"github.com/golang-jwt/jwt/v4"
+)
+
 type Model interface {
 	Invoke(ModelInput) (*ModelResponse, error)
 }
@@ -25,6 +29,15 @@ type ModelResponse struct {
 	ErrorMessage   string `json:"error"`
 }
 
+type Claims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
+
+type APIToken struct {
+	Token string `json:"token"`
+}
+
 // FeedbackPayload represents the payload for the feedback endpoint.
 type FeedbackPayload struct {
 	RequestID         string `json:"requestId"`
@@ -45,9 +58,15 @@ type ModelConfig struct {
 }
 
 type ServerConfig struct {
-	TLSCertFile  string   `yaml:"tlsCertFile"`
-	TLSKeyFile   string   `yaml:"tlsKeyFile"`
-	BearerTokens []string `yaml:"bearerTokens"`
+	TLSCertFile          string          `yaml:"tlsCertFile"`
+	TLSKeyFile           string          `yaml:"tlsKeyFile"`
+	ClientID             string          `yaml:"clientId"`
+	ClientSecret         string          `yaml:"clientSecret"`
+	RedirectURL          string          `yaml:"redirectUrl"`
+	SessionAuthKey       string          `yaml:"sessionAuthKey"`
+	SessionEncryptionKey string          `yaml:"sessionEncryptionKey"`
+	TokenEncryptionKey   string          `yaml:"tokenEncryptionKey"`
+	AllowedUsers         map[string]bool `yaml:"allowedUsers"`
 }
 
 type Config struct {
