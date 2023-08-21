@@ -10,6 +10,13 @@ import (
 	"github.com/openshift/wisdom/pkg/model"
 )
 
+func (h *Handler) CORSHandler(w http.ResponseWriter, r *http.Request) {
+	http.Header.Add(w.Header(), "Access-Control-Allow-Origin", "*")
+	http.Header.Add(w.Header(), "Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	http.Header.Add(w.Header(), "Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+}
+
 func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 	if !h.hasValidBearerToken(r) {
 		http.Error(w, "No valid bearer token found", http.StatusUnauthorized)
