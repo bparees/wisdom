@@ -6,11 +6,22 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/labstack/gommon/log"
 	"github.com/openshift/wisdom/pkg/api"
 	"github.com/openshift/wisdom/pkg/model"
 )
 
+func (h *Handler) CORSHandler(w http.ResponseWriter, r *http.Request) {
+	http.Header.Add(w.Header(), "Access-Control-Allow-Origin", "*")
+	http.Header.Add(w.Header(), "Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	http.Header.Add(w.Header(), "Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+}
+
 func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
+
+	http.Header.Add(w.Header(), "Access-Control-Allow-Origin", "*")
+
 	if !h.hasValidBearerToken(r) {
 		http.Error(w, "No valid bearer token found", http.StatusUnauthorized)
 		return
@@ -49,6 +60,7 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/json")
 	if err != nil || (response != nil && response.ErrorMessage != "") {
+		log.Debugf("model invocation returning error: %v", err)
 		w.WriteHeader(http.StatusExpectationFailed)
 	} else {
 		w.WriteHeader(http.StatusOK)
