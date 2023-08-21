@@ -133,6 +133,7 @@ func newStartServerCommand() *cobra.Command {
 			}
 
 			r.HandleFunc("/infer", h.InferHandler).Methods("POST")
+			r.HandleFunc("/infer", h.CORSHandler).Methods("OPTIONS")
 			//r.HandleFunc("/feedback", h.FeedbackHandler).Methods("POST")
 			r.HandleFunc("/login", h.HandleLogin)
 			r.HandleFunc("/githubcallback", h.HandleGithubCallback)

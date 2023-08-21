@@ -23,6 +23,9 @@ func MarkdownStripper(response *api.ModelResponse) (*api.ModelResponse, error) {
 
 	//response.Output = markdownRegex.ReplaceAllString(response.Output, "")
 	matches := markdownRegex.FindStringSubmatch(response.Output)
+	if len(matches) < 2 {
+		return response, fmt.Errorf("no markdown found in response")
+	}
 	response.Output = matches[1]
 	/*
 		node := gomarkdown.Parse([]byte(response.Output), nil)
