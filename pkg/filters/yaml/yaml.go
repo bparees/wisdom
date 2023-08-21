@@ -20,7 +20,7 @@ func YamlLinter(response *api.ModelResponse) (*api.ModelResponse, error) {
 func isValidYAML(yamlString string) error {
 	var data interface{}
 
-	log.Debugf("Validating YAML:\n%s\n", yamlString)
+	log.Debugf("Validating YAML:\n%s", yamlString)
 	err := yaml.Unmarshal([]byte(yamlString), &data)
 
 	return err

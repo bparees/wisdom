@@ -1,14 +1,17 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
 	"reflect"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 
 	"github.com/openshift/wisdom/pkg/api"
@@ -58,7 +61,7 @@ func loadConfig(filename string) (api.Config, error) {
 
 	yamlParser := yaml.NewDecoder(configFile)
 	err = yamlParser.Decode(&config)
-	log.Debugf("Loaded config: %#v\n", config)
+	log.Debugf("Loaded config: %#v", config)
 	return config, err
 }
 
@@ -91,16 +94,52 @@ func newStartServerCommand() *cobra.Command {
 				DefaultProvider: config.DefaultProvider,
 				DefaultModel:    config.DefaultModelId,
 				Models:          models,
+				ClientID:        config.ServerConfig.ClientID,
+				ClientSecret:    config.ServerConfig.ClientSecret,
+				AllowedUsers:    config.ServerConfig.AllowedUsers,
 			}
-			h.BearerTokens = make(map[string]bool)
-			for _, t := range config.ServerConfig.BearerTokens {
-				h.BearerTokens[t] = true
+			tokenKey, err := base64.StdEncoding.DecodeString(config.ServerConfig.TokenEncryptionKey)
+			if err != nil {
+				return err
+			}
+			h.TokenEncryptionKey = tokenKey
+
+			h.AuthConfig = oauth2.Config{
+				ClientID:     h.ClientID,
+				ClientSecret: h.ClientSecret,
+				Endpoint: oauth2.Endpoint{
+					AuthURL:  "https://github.com/login/oauth/authorize",
+					TokenURL: "https://github.com/login/oauth/access_token",
+				},
+				//RedirectURL: "https://localhost:8443/githubcallback",
+				RedirectURL: config.ServerConfig.RedirectURL,
+				Scopes:      []string{"user:email"},
+			}
+
+			authKey, err := base64.StdEncoding.DecodeString(config.ServerConfig.SessionAuthKey)
+			if err != nil {
+				return err
+			}
+			encKey, err := base64.StdEncoding.DecodeString(config.ServerConfig.SessionEncryptionKey)
+			if err != nil {
+				return err
+			}
+
+			h.CookieStore = sessions.NewCookieStore(authKey, encKey)
+			h.CookieStore.Options = &sessions.Options{
+				Path:     "/",
+				MaxAge:   0,
+				HttpOnly: false,
 			}
 
 			r.HandleFunc("/infer", h.InferHandler).Methods("POST")
+			//r.HandleFunc("/feedback", h.FeedbackHandler).Methods("POST")
+			r.HandleFunc("/login", h.HandleLogin)
+			r.HandleFunc("/githubcallback", h.HandleGithubCallback)
+			r.HandleFunc("/apitoken", h.HandleApiToken)
 
-			log.Infof("Default model provider: %s\n", h.DefaultProvider)
-			log.Infof("Default model: %s\n", h.DefaultModel)
+			log.Infof("Default model provider: %s", h.DefaultProvider)
+			log.Infof("Default model: %s", h.DefaultModel)
 
 			if config.ServerConfig.TLSCertFile != "" && config.ServerConfig.TLSKeyFile != "" {
 
@@ -173,16 +212,16 @@ func newInferCommand() *cobra.Command {
 			input := api.ModelInput{
 				Prompt: o.prompt,
 			}
-			log.Debugf("invoking model %s/%s\n", o.provider, o.modelId)
+			log.Debugf("invoking model %s/%s", o.provider, o.modelId)
 			response, err := model.InvokeModel(input, m, filter)
 			if err != nil {
 				if response != nil && response.Output != "" {
-					fmt.Printf("Response(Error):\n%s\n", response.Output)
+					log.Debugf("Response(Error):\n%s", response.Output)
 				}
 				return fmt.Errorf("error invoking the LLM: %v", err)
 			}
 
-			fmt.Printf("Response:\n%s\n", response.Output)
+			log.Debugf("Response:\n%s", response.Output)
 
 			return nil
 		},
@@ -209,7 +248,7 @@ func initModels(config api.Config) map[string]api.Model {
 		case "openai":
 			models[m.Provider+"/"+m.ModelId] = openai.NewOpenAIModel(m.ModelId, m.URL, m.APIKey)
 		default:
-			fmt.Printf("Unknown provider: %s\n", m.Provider)
+			log.Errorf("unknown provider: %s", m.Provider)
 		}
 	}
 	return models

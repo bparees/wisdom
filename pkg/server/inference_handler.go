@@ -55,3 +55,22 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(buf.Bytes())
 }
+
+/*
+func (h *Handler) FeedbackHandler(w http.ResponseWriter, r *http.Request) {
+	var payload api.FeedbackPayload
+	err := json.NewDecoder(r.Body).Decode(&payload)
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	// Handle the feedback request here
+
+	response := "Feedback received."
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(response))
+}
+*/
