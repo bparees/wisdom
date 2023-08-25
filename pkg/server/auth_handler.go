@@ -98,13 +98,20 @@ func (h *Handler) HandleApiToken(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, url.String(), http.StatusFound)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/json")
+
 	apiToken := api.APIToken{
 		Token: tokenString,
 	}
 	buf := bytes.Buffer{}
 	err = json.NewEncoder(&buf).Encode(apiToken)
+	if err != nil {
+		log.Errorf("failed to encode token: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	w.Header().Set("Content-Type", "text/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(buf.Bytes())
 }
