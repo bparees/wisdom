@@ -222,7 +222,7 @@ func newInferCommand() *cobra.Command {
 				return fmt.Errorf("error invoking the LLM: %v", err)
 			}
 
-			log.Debugf("Response:\n%s", response.Output)
+			fmt.Printf("Response:\n%s\n", response.Output)
 
 			return nil
 		},
