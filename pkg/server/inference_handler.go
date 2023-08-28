@@ -59,7 +59,7 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/json")
-	if err != nil || (response != nil && response.ErrorMessage != "") {
+	if err != nil || (response != nil && response.Error != "") {
 		log.Debugf("model invocation returning error: %v", err)
 		w.WriteHeader(http.StatusExpectationFailed)
 	} else {

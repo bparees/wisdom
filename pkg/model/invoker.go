@@ -15,12 +15,12 @@ func InvokeModel(input api.ModelInput, model api.Model, filter filters.Filter) (
 	}
 	log.Debugf("model response: %#v", response)
 	if err != nil {
-		response.ErrorMessage = err.Error()
+		response.Error = err.Error()
 		return response, err
 	}
 	output, err := filter.FilterResponse(response)
 	if err != nil {
-		response.ErrorMessage = err.Error()
+		response.Error = err.Error()
 	}
 	return output, err
 }

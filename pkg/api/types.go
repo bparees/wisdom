@@ -26,7 +26,7 @@ type ModelResponse struct {
 	ConversationID string `json:"conversationId"`
 	Output         string `json:"output"`
 	RawOutput      string `json:"raw_output"`
-	ErrorMessage   string `json:"error"`
+	Error          string `json:"error"`
 }
 
 type Claims struct {
