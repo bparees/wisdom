@@ -1,9 +1,9 @@
 package filters
 
 import (
-	"github.com/openshift/wisdom/pkg/api"
-	"github.com/openshift/wisdom/pkg/filters/markdown"
 	"github.com/openshift/wisdom/pkg/filters/yaml"
+
+	"github.com/openshift/wisdom/pkg/api"
 )
 
 type Filter struct {
@@ -15,7 +15,8 @@ type ResponseFilter func(response *api.ModelResponse) (*api.ModelResponse, error
 
 func NewFilter() Filter {
 	filter := Filter{}
-	filter.responseFilterChain = append(filter.responseFilterChain, markdown.MarkdownStripper, yaml.YamlLinter)
+	//filter.responseFilterChain = append(filter.responseFilterChain, markdown.MarkdownStripper, yaml.YamlLinter)
+	filter.responseFilterChain = append(filter.responseFilterChain, yaml.YamlLinter)
 	return filter
 }
 

@@ -67,7 +67,7 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	payload := IBMModelRequestPayload{
 		Prompt:  input.Prompt,
 		ModelID: m.modelId,
-		TaskID:  "yaml-only-output",
+		TaskID:  "yaml-only-raw-output",
 		Mode:    "synchronous",
 	}
 
