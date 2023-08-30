@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/labstack/gommon/log"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/openshift/wisdom/pkg/api"
 	"github.com/openshift/wisdom/pkg/model"
 )
@@ -33,8 +34,6 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Running inference for prompt: %s\n", payload.Prompt)
-
 	if payload.Provider == "" {
 		payload.Provider = h.DefaultProvider
 	}
@@ -46,6 +45,9 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Invalid provider/model: %s|%s", payload.Provider, payload.ModelId), http.StatusBadRequest)
 		return
 	}
+
+	log.Debugf("Using provider/model %s/%s for prompt:\n%s\n", payload.Provider, payload.ModelId, payload.Prompt)
+
 	response, err := model.InvokeModel(payload, m, h.Filter)
 
 	buf := bytes.Buffer{}
