@@ -14,7 +14,7 @@ var (
 	markdownRegex = regexp.MustCompile("(?s)`{3}.*?\n(.*)`{3}")
 )
 
-func MarkdownStripper(response *api.ModelResponse) (*api.ModelResponse, error) {
+func MarkdownStripper(response api.ModelResponse) (api.ModelResponse, error) {
 
 	if response.Output == "" {
 		return response, fmt.Errorf("response output is empty")

@@ -16,6 +16,7 @@ import (
 
 	"github.com/openshift/wisdom/pkg/api"
 	"github.com/openshift/wisdom/pkg/model"
+	hf "github.com/openshift/wisdom/pkg/model/huggingface"
 	"github.com/openshift/wisdom/pkg/model/ibm"
 	"github.com/openshift/wisdom/pkg/model/openai"
 	"github.com/openshift/wisdom/pkg/server"
@@ -213,8 +214,8 @@ func newInferCommand() *cobra.Command {
 			log.Debugf("Using provider/model %s/%s for prompt:\n%s\n", o.provider, o.modelId, o.prompt)
 			response, err := model.InvokeModel(input, m)
 			if err != nil {
-				if response != nil && response.Output != "" {
-					log.Debugf("Response(Error):\n%s", response.Output)
+				if response.Error != "" {
+					log.Debugf("Response(Error):\n%s", response.Error)
 				}
 				return fmt.Errorf("error invoking the LLM: %v", err)
 			}
@@ -243,9 +244,11 @@ func initModels(config api.Config) map[string]api.Model {
 		switch m.Provider {
 		case "ibm":
 			models[m.Provider+"/"+m.ModelId] = ibm.NewIBMModel(m.ModelId, m.URL, m.UserId, m.APIKey)
-
 		case "openai":
 			models[m.Provider+"/"+m.ModelId] = openai.NewOpenAIModel(m.ModelId, m.URL, m.APIKey)
+		case "huggingface":
+			models[m.Provider+"/"+m.ModelId] = hf.NewHFModel(m.ModelId, m.URL, m.APIKey)
+
 		default:
 			log.Errorf("unknown provider: %s", m.Provider)
 		}

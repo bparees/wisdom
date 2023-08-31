@@ -10,7 +10,7 @@ import (
 	"github.com/openshift/wisdom/pkg/api"
 )
 
-func YamlLinter(response *api.ModelResponse) (*api.ModelResponse, error) {
+func YamlLinter(response api.ModelResponse) (api.ModelResponse, error) {
 	if err := isValidYAML(response.Output); err != nil {
 		return response, fmt.Errorf("response output is not valid YAML: %s", err)
 	}

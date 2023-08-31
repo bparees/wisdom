@@ -49,19 +49,22 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("Using provider/model %s/%s for prompt:\n%s\n", payload.Provider, payload.ModelId, payload.Prompt)
 
 	response, err := model.InvokeModel(payload, m)
+	if err != nil {
+		log.Errorf("failed to invoke model: %v", err)
+		http.Error(w, "Failed to invoke model", http.StatusInternalServerError)
+		return
+	}
 
 	buf := bytes.Buffer{}
-	if response != nil {
-		err = json.NewEncoder(&buf).Encode(response)
-		if err != nil {
-			w.WriteHeader(http.StatusExpectationFailed)
-			w.Write([]byte(err.Error()))
-			return
-		}
+	err = json.NewEncoder(&buf).Encode(response)
+	if err != nil {
+		w.WriteHeader(http.StatusExpectationFailed)
+		w.Write([]byte(err.Error()))
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/json")
-	if err != nil || (response != nil && response.Error != "") {
+	if err != nil || (response.Error != "") {
 		log.Debugf("model invocation returning error: %v", err)
 		w.WriteHeader(http.StatusExpectationFailed)
 	} else {

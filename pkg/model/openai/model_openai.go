@@ -9,11 +9,6 @@ import (
 	"github.com/openshift/wisdom/pkg/api"
 )
 
-const (
-	PROVIDER_ID = "openai"
-	MODEL_ID    = "gpt-3.5-turbo"
-)
-
 // OpenAI
 type OpenAIMessage struct {
 	Role    string `json:"role"`
@@ -55,10 +50,10 @@ func (m *OpenAIModel) GetFilter() api.Filter {
 	return m.filter
 }
 
-func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
+func (m *OpenAIModel) Invoke(input api.ModelInput) (api.ModelResponse, error) {
 
 	if input.APIKey == "" && m.apiKey == "" {
-		return nil, fmt.Errorf("api key is required, none provided")
+		return api.ModelResponse{}, fmt.Errorf("api key is required, none provided")
 	}
 
 	apiKey := m.apiKey
@@ -75,14 +70,14 @@ func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		//fmt.Println("Error encoding JSON:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 
 	apiURL := m.url + "/v1/chat/completions"
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		//fmt.Println("Error creating HTTP request:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 
 	// Set the "Content-Type" header to "application/json"
@@ -97,13 +92,13 @@ func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		//fmt.Println("Error making API request:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request failed with status: %s", resp.Status)
+		return api.ModelResponse{}, fmt.Errorf("API request failed with status: %s", resp.Status)
 	}
 
 	// Parse the JSON response into the APIResponse struct
@@ -111,14 +106,14 @@ func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	err = json.NewDecoder(resp.Body).Decode(&apiResp)
 	if err != nil {
 		fmt.Println("Error decoding API response:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 	if len(apiResp.Choices) == 0 {
-		return nil, fmt.Errorf("model returned no valid responses: %v", apiResp)
+		return api.ModelResponse{}, fmt.Errorf("model returned no valid responses: %v", apiResp)
 	}
 	response := api.ModelResponse{}
 	response.Input = input.Prompt
 	response.Output = apiResp.Choices[0].Message.Content
 	response.RawOutput = apiResp.Choices[0].Message.Content
-	return &response, err
+	return response, err
 }

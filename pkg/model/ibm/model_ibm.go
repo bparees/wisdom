@@ -11,11 +11,6 @@ import (
 	"github.com/openshift/wisdom/pkg/filters/yaml"
 )
 
-const (
-	PROVIDER_ID = "ibm"
-	MODEL_ID    = "L3Byb2plY3RzL2czYmNfc3RhY2tfc3RnMl9lcG9jaDNfanVsXzMx"
-)
-
 type IBMModelRequestPayload struct {
 	Prompt  string `json:"prompt"`
 	ModelID string `json:"model_id"`
@@ -56,13 +51,13 @@ func (m *IBMModel) GetFilter() api.Filter {
 	return m.filter
 }
 
-func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
+func (m *IBMModel) Invoke(input api.ModelInput) (api.ModelResponse, error) {
 
 	if input.UserId == "" && m.userId == "" {
-		return nil, fmt.Errorf("user email address is required, none provided")
+		return api.ModelResponse{}, fmt.Errorf("user email address is required, none provided")
 	}
 	if input.APIKey == "" && m.apiKey == "" {
-		return nil, fmt.Errorf("api key is required, none provided")
+		return api.ModelResponse{}, fmt.Errorf("api key is required, none provided")
 	}
 
 	apiKey, userId := m.apiKey, m.userId
@@ -84,14 +79,14 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		//fmt.Println("Error encoding JSON:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 
 	apiURL := m.url + "/api/v1/jobs"
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		//fmt.Println("Error creating HTTP request:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 
 	// Set the "Content-Type" header to "application/json"
@@ -106,13 +101,13 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	resp, err := client.Do(req)
 	if err != nil {
 		//fmt.Println("Error making API request:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 	defer resp.Body.Close()
 
 	// Check the response status code
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request failed with status: %v", resp.Status)
+		return api.ModelResponse{}, fmt.Errorf("API request failed with status: %v", resp.Status)
 	}
 
 	// Parse the JSON response into the APIResponse struct
@@ -120,7 +115,7 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	err = json.NewDecoder(resp.Body).Decode(&apiResp)
 	if err != nil {
 		//fmt.Println("Error decoding API response:", err)
-		return nil, err
+		return api.ModelResponse{}, err
 	}
 	response := api.ModelResponse{}
 	response.Input = input.Prompt
@@ -129,9 +124,9 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	//output := apiResp.AllTokens[len(apiResp.InputTokens):]
 	response.RequestID = apiResp.JobID
 
-	return &response, err
+	return response, err
 }
 
-func (m *IBMModel) FilterInput(input *api.ModelInput) (*api.ModelInput, error) {
+func (m *IBMModel) FilterInput(input api.ModelInput) (api.ModelInput, error) {
 	return m.filter.FilterInput(input)
 }
