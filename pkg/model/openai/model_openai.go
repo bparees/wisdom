@@ -37,14 +37,22 @@ type OpenAIModel struct {
 	modelId string
 	url     string
 	apiKey  string
+	filter  api.Filter
 }
 
 func NewOpenAIModel(modelId, url, apiKey string) *OpenAIModel {
+	filter := api.NewFilter(nil, nil)
+
 	return &OpenAIModel{
 		modelId: modelId,
 		url:     url,
 		apiKey:  apiKey,
+		filter:  filter,
 	}
+}
+
+func (m *OpenAIModel) GetFilter() api.Filter {
+	return m.filter
 }
 
 func (m *OpenAIModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {

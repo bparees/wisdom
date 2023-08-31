@@ -3,12 +3,10 @@ package server
 import (
 	"github.com/gorilla/sessions"
 	"github.com/openshift/wisdom/pkg/api"
-	"github.com/openshift/wisdom/pkg/filters"
 	"golang.org/x/oauth2"
 )
 
 type Handler struct {
-	Filter          filters.Filter
 	DefaultModel    string
 	DefaultProvider string
 	Models          map[string]api.Model

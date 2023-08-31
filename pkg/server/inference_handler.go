@@ -48,7 +48,7 @@ func (h *Handler) InferHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Debugf("Using provider/model %s/%s for prompt:\n%s\n", payload.Provider, payload.ModelId, payload.Prompt)
 
-	response, err := model.InvokeModel(payload, m, h.Filter)
+	response, err := model.InvokeModel(payload, m)
 
 	buf := bytes.Buffer{}
 	if response != nil {

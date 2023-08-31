@@ -15,7 +15,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/openshift/wisdom/pkg/api"
-	"github.com/openshift/wisdom/pkg/filters"
 	"github.com/openshift/wisdom/pkg/model"
 	"github.com/openshift/wisdom/pkg/model/ibm"
 	"github.com/openshift/wisdom/pkg/model/openai"
@@ -90,7 +89,6 @@ func newStartServerCommand() *cobra.Command {
 			models = initModels(config)
 
 			h := server.Handler{
-				Filter:          filters.NewFilter(),
 				DefaultProvider: config.DefaultProvider,
 				DefaultModel:    config.DefaultModelId,
 				Models:          models,
@@ -195,7 +193,6 @@ func newInferCommand() *cobra.Command {
 			if o.prompt == "" {
 				return fmt.Errorf("model prompt is required")
 			}
-			filter := filters.NewFilter()
 
 			// If the user didn't specify a provider or model, use the defaults from the config file
 			if o.provider == "" {
@@ -213,8 +210,8 @@ func newInferCommand() *cobra.Command {
 			input := api.ModelInput{
 				Prompt: o.prompt,
 			}
-			log.Debugf("invoking model %s/%s", o.provider, o.modelId)
-			response, err := model.InvokeModel(input, m, filter)
+			log.Debugf("Using provider/model %s/%s for prompt:\n%s\n", o.provider, o.modelId, o.prompt)
+			response, err := model.InvokeModel(input, m)
 			if err != nil {
 				if response != nil && response.Output != "" {
 					log.Debugf("Response(Error):\n%s", response.Output)
@@ -246,6 +243,7 @@ func initModels(config api.Config) map[string]api.Model {
 		switch m.Provider {
 		case "ibm":
 			models[m.Provider+"/"+m.ModelId] = ibm.NewIBMModel(m.ModelId, m.URL, m.UserId, m.APIKey)
+
 		case "openai":
 			models[m.Provider+"/"+m.ModelId] = openai.NewOpenAIModel(m.ModelId, m.URL, m.APIKey)
 		default:

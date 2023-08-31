@@ -4,8 +4,51 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+type Filter struct {
+	InputFilterChain    []InputFilter
+	ResponseFilterChain []ResponseFilter
+}
+
+type InputFilter func(input *ModelInput) (*ModelInput, error)
+type ResponseFilter func(response *ModelResponse) (*ModelResponse, error)
+
+func NewFilter(inputFilters []InputFilter, responseFilters []ResponseFilter) Filter {
+	filter := Filter{
+		InputFilterChain:    inputFilters,
+		ResponseFilterChain: responseFilters,
+	}
+	return filter
+}
+
+func (f *Filter) FilterInput(input *ModelInput) (*ModelInput, error) {
+	output := input
+	var err error
+	for _, filter := range f.InputFilterChain {
+		output, err = filter(output)
+		if err != nil {
+			return output, err
+		}
+	}
+	return output, err
+}
+
+func (f Filter) FilterResponse(response *ModelResponse) (*ModelResponse, error) {
+	output := response
+	var err error
+	for _, filter := range f.ResponseFilterChain {
+		output, err = filter(output)
+		if err != nil {
+			return output, err
+		}
+	}
+	return output, err
+}
+
 type Model interface {
 	Invoke(ModelInput) (*ModelResponse, error)
+	GetFilter() Filter
+	//FilterInput(*ModelInput) (*ModelInput, error)
+	//FilterResponse(*ModelResponse) (*ModelResponse, error)
 }
 
 // ModelInput represents the payload for the prompt_request endpoint.

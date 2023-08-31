@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/openshift/wisdom/pkg/api"
+	"github.com/openshift/wisdom/pkg/filters/markdown"
+	"github.com/openshift/wisdom/pkg/filters/yaml"
 )
 
 const (
@@ -36,15 +38,22 @@ type IBMModel struct {
 	url     string
 	apiKey  string
 	userId  string
+	filter  api.Filter
 }
 
 func NewIBMModel(modelId, url, userId, apiKey string) *IBMModel {
+	filter := api.NewFilter(nil, []api.ResponseFilter{markdown.MarkdownStripper, yaml.YamlLinter})
 	return &IBMModel{
 		modelId: modelId,
 		url:     url,
 		apiKey:  apiKey,
 		userId:  userId,
+		filter:  filter,
 	}
+}
+
+func (m *IBMModel) GetFilter() api.Filter {
+	return m.filter
 }
 
 func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
@@ -121,4 +130,8 @@ func (m *IBMModel) Invoke(input api.ModelInput) (*api.ModelResponse, error) {
 	response.RequestID = apiResp.JobID
 
 	return &response, err
+}
+
+func (m *IBMModel) FilterInput(input *api.ModelInput) (*api.ModelInput, error) {
+	return m.filter.FilterInput(input)
 }
