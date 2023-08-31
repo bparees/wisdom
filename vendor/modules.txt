@@ -13,6 +13,9 @@ github.com/gorilla/securecookie
 # github.com/gorilla/sessions v1.2.1
 ## explicit
 github.com/gorilla/sessions
+# github.com/hupe1980/go-huggingface v0.0.8
+## explicit; go 1.20
+github.com/hupe1980/go-huggingface
 # github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
