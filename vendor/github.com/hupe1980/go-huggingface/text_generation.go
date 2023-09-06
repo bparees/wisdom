@@ -51,14 +51,14 @@ type TextGenerationRequest struct {
 
 // A list of generated texts. The length of this list is the value of
 // NumReturnSequences in the request.
-type TextGenerationResponse []struct {
+type TextGenerationResponse struct {
 	GeneratedText string `json:"generated_text,omitempty"`
 }
 
 // TextGeneration performs text generation using the specified model.
 // It sends a POST request to the Hugging Face inference endpoint with the provided inputs.
 // The response contains the generated text or an error if the request fails.
-func (ic *InferenceClient) TextGeneration(ctx context.Context, req *TextGenerationRequest) (TextGenerationResponse, error) {
+func (ic *InferenceClient) TextGeneration(ctx context.Context, req *TextGenerationRequest) (*TextGenerationResponse, error) {
 	if req.Inputs == "" {
 		return nil, errors.New("inputs are required")
 	}
@@ -68,8 +68,9 @@ func (ic *InferenceClient) TextGeneration(ctx context.Context, req *TextGenerati
 		return nil, err
 	}
 
-	textGenerationResponse := TextGenerationResponse{}
-	if err := json.Unmarshal(body, &textGenerationResponse); err != nil {
+	textGenerationResponse := &TextGenerationResponse{}
+
+	if err := json.Unmarshal(body, textGenerationResponse); err != nil {
 		return nil, err
 	}
 
